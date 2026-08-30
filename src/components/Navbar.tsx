@@ -13,58 +13,107 @@ const Navbar = () => {
     smoother = ScrollSmoother.create({
       wrapper: "#smooth-wrapper",
       content: "#smooth-content",
-      smooth: 1.7,
-      speed: 1.7,
+      smooth: 1.2,
+      speed: 1,
       effects: true,
       autoResize: true,
       ignoreMobileResize: true,
+      smoothTouch: 0.1,
     });
 
     smoother.scrollTop(0);
-    smoother.paused(true);
+    smoother.paused(false);
 
-    let links = document.querySelectorAll(".header ul a");
-    links.forEach((elem) => {
-      let element = elem as HTMLAnchorElement;
-      element.addEventListener("click", (e) => {
-        if (window.innerWidth > 1024) {
-          e.preventDefault();
-          let elem = e.currentTarget as HTMLAnchorElement;
-          let section = elem.getAttribute("data-href");
-          smoother.scrollTo(section, true, "top top");
-        }
-      });
-    });
     window.addEventListener("resize", () => {
       ScrollSmoother.refresh(true);
     });
   }, []);
+
+  const handleNavClick = (
+    e: React.MouseEvent<HTMLAnchorElement>,
+    target: string
+  ) => {
+    e.preventDefault();
+    if (target === "#landingDiv" || target === "top" || target === "#/") {
+      if (smoother && window.innerWidth > 1024) {
+        smoother.scrollTop(0);
+      } else {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+    } else {
+      if (smoother && window.innerWidth > 1024) {
+        smoother.scrollTo(target, true, "top top");
+      } else {
+        const el = document.querySelector(target);
+        if (el) {
+          const headerHeight = window.innerWidth <= 480 ? 60 : 70;
+          const elementPosition =
+            el.getBoundingClientRect().top + window.pageYOffset;
+          const offsetPosition = Math.max(0, elementPosition - headerHeight);
+          window.scrollTo({
+            top: offsetPosition,
+            behavior: "smooth",
+          });
+        }
+      }
+    }
+  };
+
   return (
     <>
       <div className="header">
-        <a href="/#" className="navbar-title" data-cursor="disable">
-          Logo
+        <a
+          href="#landingDiv"
+          data-href="#landingDiv"
+          className="navbar-title"
+          data-cursor="disable"
+          onClick={(e) => handleNavClick(e, "#landingDiv")}
+        >
+          Abhishek Jadhav
         </a>
         <a
-          href="mailto:example@mail.com"
+          href="https://mail.google.com/mail/u/0/?tab=rm&ogbl#sent"
+          target="_blank"
+          rel="noopener noreferrer"
           className="navbar-connect"
           data-cursor="disable"
         >
-          example@mail.com
+          abhishek.creatix@gmail.com
         </a>
         <ul>
           <li>
-            <a data-href="#about" href="#about">
+            <a
+              href="#about"
+              data-href="#about"
+              onClick={(e) => handleNavClick(e, "#about")}
+            >
               <HoverLinks text="ABOUT" />
             </a>
           </li>
           <li>
-            <a data-href="#work" href="#work">
+            <a
+              href="#work"
+              data-href="#work"
+              onClick={(e) => handleNavClick(e, "#work")}
+            >
               <HoverLinks text="WORK" />
             </a>
           </li>
+          <li className="nav-techstack-link">
+            <a
+              href="#techstack"
+              data-href="#techstack"
+              onClick={(e) => handleNavClick(e, "#techstack")}
+            >
+              <HoverLinks text="TECH STACK" />
+            </a>
+          </li>
           <li>
-            <a data-href="#contact" href="#contact">
+            <a
+              href="#contact"
+              data-href="#contact"
+              onClick={(e) => handleNavClick(e, "#contact")}
+            >
               <HoverLinks text="CONTACT" />
             </a>
           </li>

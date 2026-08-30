@@ -5,32 +5,60 @@ import { useLoading } from "../context/LoadingProvider";
 import Marquee from "react-fast-marquee";
 
 const Loading = ({ percent }: { percent: number }) => {
-  const { setIsLoading } = useLoading();
+  const { setIsLoading, setLoading: setContextLoading } = useLoading();
   const [loaded, setLoaded] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
   const [clicked, setClicked] = useState(false);
 
-  if (percent >= 100) {
-    setTimeout(() => {
-      setLoaded(true);
-      setTimeout(() => {
-        setIsLoaded(true);
-      }, 1000);
-    }, 600);
-  }
+  // Auto-progress on mobile (where 3D model is disabled) or fallback timeout
+  useEffect(() => {
+    const isMobile = typeof window !== "undefined" && window.innerWidth <= 1024;
+    if (isMobile) {
+      let cur = 0;
+      const interval = setInterval(() => {
+        cur += Math.floor(Math.random() * 15) + 12;
+        if (cur >= 100) {
+          cur = 100;
+          clearInterval(interval);
+          setContextLoading(100);
+        } else {
+          setContextLoading(cur);
+        }
+      }, 50);
+      return () => clearInterval(interval);
+    } else {
+      const fallback = setTimeout(() => {
+        setContextLoading(100);
+      }, 3500);
+      return () => clearTimeout(fallback);
+    }
+  }, []);
 
   useEffect(() => {
-    import("./utils/initialFX").then((module) => {
-      if (isLoaded) {
-        setClicked(true);
+    if (percent >= 100 && !loaded) {
+      const t1 = setTimeout(() => {
+        setLoaded(true);
+        const t2 = setTimeout(() => {
+          setIsLoaded(true);
+        }, 700);
+        return () => clearTimeout(t2);
+      }, 400);
+      return () => clearTimeout(t1);
+    }
+  }, [percent, loaded]);
+
+  useEffect(() => {
+    if (isLoaded) {
+      setClicked(true);
+      import("./utils/initialFX").then((module) => {
         setTimeout(() => {
           if (module.initialFX) {
             module.initialFX();
           }
           setIsLoading(false);
-        }, 900);
-      }
-    });
+        }, 800);
+      });
+    }
   }, [isLoaded]);
 
   function handleMouseMove(e: React.MouseEvent<HTMLElement>) {
@@ -46,7 +74,7 @@ const Loading = ({ percent }: { percent: number }) => {
     <>
       <div className="loading-header">
         <a href="/#" className="loader-title" data-cursor="disable">
-          Logo
+          Abhishek Jadhav
         </a>
         <div className={`loaderGame ${clicked && "loader-out"}`}>
           <div className="loaderGame-container">
@@ -62,8 +90,8 @@ const Loading = ({ percent }: { percent: number }) => {
       <div className="loading-screen">
         <div className="loading-marquee">
           <Marquee>
-            <span> A Creative Developer</span> <span>A Creative Designer</span>
-            <span> A Creative Developer</span> <span>A Creative Designer</span>
+            <span> A Creative Storyteller</span> <span>A Creative Video Editor</span>
+            <span> A Creative Storyteller</span> <span>A Creative Video Editor</span>
           </Marquee>
         </div>
         <div

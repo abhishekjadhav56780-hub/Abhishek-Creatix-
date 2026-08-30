@@ -16,8 +16,9 @@ const WhatIDo = () => {
         }
       });
     }
+    const currentContainers = containerRef.current;
     return () => {
-      containerRef.current.forEach((container) => {
+      currentContainers.forEach((container) => {
         if (container) {
           container.removeEventListener("click", () => handleClick(container));
         }
@@ -25,8 +26,8 @@ const WhatIDo = () => {
     };
   }, []);
   return (
-    <div className="whatIDO">
-      <div className="what-box">
+    <div className="whatIDO" id="what-i-do">
+      <div className="what-box mobile-reveal">
         <h2 className="title">
           W<span className="hat-h2">HAT</span>
           <div>
@@ -34,7 +35,7 @@ const WhatIDo = () => {
           </div>
         </h2>
       </div>
-      <div className="what-box">
+      <div className="what-box mobile-reveal mobile-reveal-stagger-1">
         <div className="what-box-in">
           <div className="what-border2">
             <svg width="100%">
@@ -87,24 +88,23 @@ const WhatIDo = () => {
             <div className="what-corner"></div>
 
             <div className="what-content-in">
-              <h3>DEVELOP</h3>
-              <h4>Description</h4>
+              <h3>EDITING</h3>
+              <h4>Core Services</h4>
               <p>
-                Lorem ipsum dolor sit amet consectetur adipisicing elit. Quas
-                quia aliquid laboriosam ducimus sit molestiae.
+                <strong>Video Editing:</strong> Turning raw footage into clean,
+                engaging and well-paced videos.
+                <br />
+                <br />
+                <strong>Storytelling:</strong> Structuring footage, pacing and
+                visuals to keep the viewer engaged.
               </p>
-              <h5>Skillset & tools</h5>
+              <h5>Focus Areas</h5>
               <div className="what-content-flex">
-                <div className="what-tags">JavaScript</div>
-                <div className="what-tags">TypeScript</div>
-                <div className="what-tags">Three.js</div>
-                <div className="what-tags">React</div>
-                <div className="what-tags">Css</div>
-                <div className="what-tags">Node.js</div>
-                <div className="what-tags">Next.js</div>
-                <div className="what-tags">Express.js</div>
-                <div className="what-tags">PHP</div>
-                <div className="what-tags">MySql</div>
+                <div className="what-tags">Video Editing</div>
+                <div className="what-tags">Storytelling</div>
+                <div className="what-tags">Pacing</div>
+                <div className="what-tags">Clean Cuts</div>
+                <div className="what-tags">Audio Sync</div>
               </div>
               <div className="what-arrow"></div>
             </div>
@@ -128,22 +128,23 @@ const WhatIDo = () => {
             </div>
             <div className="what-corner"></div>
             <div className="what-content-in">
-              <h3>DESIGN</h3>
-              <h4>Description</h4>
+              <h3>MOTION</h3>
+              <h4>Specialized Services</h4>
               <p>
-                Lorem ipsum dolor sit amet consectetur adipisicing elit. Quas
-                quia aliquid laboriosam ducimus sit molestiae
+                <strong>Motion Editing:</strong> Adding motion, transitions and
+                visual elements that make videos more dynamic.
+                <br />
+                <br />
+                <strong>Talking Head Editing:</strong> Creating natural,
+                engaging and retention-focused talking-head videos.
               </p>
-              <h5>Skillset & tools</h5>
+              <h5>Focus Areas</h5>
               <div className="what-content-flex">
-                <div className="what-tags">Blender</div>
-                <div className="what-tags">Zbrush</div>
-                <div className="what-tags">UI Design</div>
-                <div className="what-tags">Motion</div>
-                <div className="what-tags">Rigging</div>
-                <div className="what-tags">3D Animation</div>
-                <div className="what-tags">Character Design</div>
-                <div className="what-tags">Modelling</div>
+                <div className="what-tags">Motion Editing</div>
+                <div className="what-tags">Talking Head</div>
+                <div className="what-tags">Transitions</div>
+                <div className="what-tags">Visual Elements</div>
+                <div className="what-tags">Retention</div>
               </div>
               <div className="what-arrow"></div>
             </div>

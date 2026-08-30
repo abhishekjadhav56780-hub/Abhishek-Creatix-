@@ -345,6 +345,34 @@
     font-size: 100px;
   }
 }
+@media only screen and (max-width: 480px) {
+  .loading-header {
+    padding: 15px 0px;
+  }
+  .loader-title {
+    font-size: 13px;
+  }
+  .loading-marquee {
+    font-size: 34px;
+  }
+  .loading-marquee span {
+    padding: 0px 25px;
+  }
+  .loading-marquee span::before {
+    width: 12px;
+    height: 12px;
+  }
+  .loading-wrap {
+    --Lsize: 130px;
+  }
+  .loading-button {
+    padding: 16px 36px;
+    font-size: 16px;
+  }
+  .loading-container {
+    left: 36px;
+  }
+}
 @media only screen and (min-width: 500px) {
   .loading-header {
     padding: 20px 0px;

@@ -30,10 +30,9 @@ const setCharacter = (
             await renderer.compileAsync(character, camera, scene);
             character.traverse((child: any) => {
               if (child.isMesh) {
-                const mesh = child as THREE.Mesh;
                 child.castShadow = true;
                 child.receiveShadow = true;
-                mesh.frustumCulled = true;
+                child.frustumCulled = true;
               }
             });
             resolve(gltf);
