@@ -83,6 +83,7 @@ interface ReelCardProps {
   cardClass: string;
   isCenter: boolean;
   isAdjacent: boolean;
+  isSectionVisible: boolean;
   isPlaying: boolean;
   isMuted: boolean;
   onTogglePlay: () => void;
@@ -94,7 +95,7 @@ const ReelCard = ({
   project,
   cardClass,
   isCenter,
-  isAdjacent,
+  isSectionVisible,
   isPlaying,
   isMuted,
   onTogglePlay,
@@ -107,7 +108,7 @@ const ReelCard = ({
     const video = videoRef.current;
     if (!video) return;
 
-    if (isCenter) {
+    if (isCenter && isSectionVisible) {
       video.muted = isMuted;
       if (isPlaying) {
         video.play().catch(() => {
@@ -123,13 +124,10 @@ const ReelCard = ({
       video.currentTime = 0;
       video.muted = true;
     }
-  }, [isCenter, isPlaying, isMuted]);
+  }, [isCenter, isSectionVisible, isPlaying, isMuted]);
 
-  // Preload strategy:
-  // - Center card: "auto" for immediate readiness on click
-  // - Adjacent cards: "metadata"
-  // - Far cards: "none"
-  const preloadStrategy = isCenter ? "auto" : isAdjacent ? "metadata" : "none";
+  // Active center video mounts video element only when section is visible
+  const shouldMountVideo = isCenter && isSectionVisible;
 
   return (
     <div
@@ -167,15 +165,15 @@ const ReelCard = ({
 
       {/* Thumbnail / Video Player */}
       <div className="card-media-wrap">
-        {project.video ? (
+        {shouldMountVideo ? (
           <video
             ref={videoRef}
             src={project.video}
             poster={project.image}
             loop
             playsInline
-            muted={isCenter ? isMuted : true}
-            preload={preloadStrategy}
+            muted={isMuted}
+            preload="metadata"
             disablePictureInPicture
             controlsList="nodownload nofullscreen noremoteplayback"
           />
@@ -214,9 +212,33 @@ const Work = () => {
   const [activeIndex, setActiveIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false); // Default music ON when user starts playback
+  const [isSectionVisible, setIsSectionVisible] = useState(false);
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
   const [touchStartY, setTouchStartY] = useState<number | null>(null);
+  const workSectionRef = useRef<HTMLDivElement | null>(null);
   const totalProjects = reelProjects.length;
+
+  // Viewport IntersectionObserver to ensure video decoders only run when section is visible
+  useEffect(() => {
+    const el = workSectionRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsSectionVisible(entry.isIntersecting);
+        if (!entry.isIntersecting) {
+          setIsPlaying(false);
+        }
+      },
+      {
+        rootMargin: "250px 0px 250px 0px",
+        threshold: 0.05,
+      }
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   const nextSlide = () => {
     setIsPlaying(false);
@@ -291,7 +313,7 @@ const Work = () => {
   };
 
   return (
-    <div className="work-section section-container" id="work">
+    <div className="work-section section-container" id="work" ref={workSectionRef}>
       <div className="work-container">
         <div className="work-header mobile-reveal">
           <h2>
@@ -340,6 +362,7 @@ const Work = () => {
                   cardClass={cardClass}
                   isCenter={isCenter}
                   isAdjacent={isAdjacent}
+                  isSectionVisible={isSectionVisible}
                   isPlaying={isCenter ? isPlaying : false}
                   isMuted={isMuted}
                   onTogglePlay={togglePlay}

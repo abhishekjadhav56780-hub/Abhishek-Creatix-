@@ -1,4 +1,4 @@
-import { PropsWithChildren, useEffect, useState } from "react";
+import { PropsWithChildren, useEffect, useState, lazy, Suspense } from "react";
 import About from "./About";
 import Career from "./Career";
 import Contact from "./Contact";
@@ -7,7 +7,7 @@ import Landing from "./Landing";
 import Navbar from "./Navbar";
 import WhatIDo from "./WhatIDo";
 import Work from "./Work";
-import TechStack from "./TechStack";
+const TechStack = lazy(() => import("./TechStack"));
 import setSplitText from "./utils/splitText";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
@@ -17,12 +17,18 @@ const MainContainer = ({ children }: PropsWithChildren) => {
   );
 
   useEffect(() => {
+    setIsDesktopView(window.innerWidth > 1024);
+    setSplitText();
+
+    let resizeTimer: any;
     const resizeHandler = () => {
-      setIsDesktopView(window.innerWidth > 1024);
-      setSplitText();
-      ScrollTrigger.refresh();
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => {
+        setIsDesktopView(window.innerWidth > 1024);
+        setSplitText();
+        ScrollTrigger.refresh();
+      }, 150);
     };
-    resizeHandler();
 
     window.addEventListener("resize", resizeHandler);
 
@@ -49,6 +55,7 @@ const MainContainer = ({ children }: PropsWithChildren) => {
     }
 
     return () => {
+      clearTimeout(resizeTimer);
       window.removeEventListener("resize", resizeHandler);
       observer?.disconnect();
     };
@@ -80,7 +87,9 @@ const MainContainer = ({ children }: PropsWithChildren) => {
             <Work />
 
             {/* 06 — Tech Stack */}
-            <TechStack />
+            <Suspense fallback={<div className="techstack-section section-container" id="techstack" />}>
+              <TechStack />
+            </Suspense>
 
             {/* 07 — Contact */}
             <Contact />
@@ -92,4 +101,3 @@ const MainContainer = ({ children }: PropsWithChildren) => {
 };
 
 export default MainContainer;
-

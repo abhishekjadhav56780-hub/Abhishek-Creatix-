@@ -4,46 +4,81 @@ import gsap from "gsap";
 
 const Cursor = () => {
   const cursorRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
+    // Disable custom cursor overhead on touch / mobile devices
+    if (typeof window !== "undefined" && (window.matchMedia("(pointer: coarse)").matches || window.innerWidth <= 1024)) {
+      return;
+    }
+
+    const cursor = cursorRef.current;
+    if (!cursor) return;
+
     let hover = false;
-    const cursor = cursorRef.current!;
-    const mousePos = { x: 0, y: 0 };
-    const cursorPos = { x: 0, y: 0 };
-    document.addEventListener("mousemove", (e) => {
+    const mousePos = { x: -100, y: -100 };
+    const cursorPos = { x: -100, y: -100 };
+
+    const setCursorX = gsap.quickSetter(cursor, "x", "px");
+    const setCursorY = gsap.quickSetter(cursor, "y", "px");
+
+    const onMouseMove = (e: MouseEvent) => {
       mousePos.x = e.clientX;
       mousePos.y = e.clientY;
-    });
-    requestAnimationFrame(function loop() {
+    };
+
+    window.addEventListener("mousemove", onMouseMove, { passive: true });
+
+    let animId: number;
+    function loop() {
       if (!hover) {
         const delay = 6;
         cursorPos.x += (mousePos.x - cursorPos.x) / delay;
         cursorPos.y += (mousePos.y - cursorPos.y) / delay;
-        gsap.to(cursor, { x: cursorPos.x, y: cursorPos.y, duration: 0.1 });
+        setCursorX(cursorPos.x);
+        setCursorY(cursorPos.y);
       }
-      requestAnimationFrame(loop);
-    });
+      animId = requestAnimationFrame(loop);
+    }
+    animId = requestAnimationFrame(loop);
+
+    const mouseOverHandlers: { el: HTMLElement; over: (e: MouseEvent) => void; out: () => void }[] = [];
+
     document.querySelectorAll("[data-cursor]").forEach((item) => {
       const element = item as HTMLElement;
-      element.addEventListener("mouseover", (e: MouseEvent) => {
+      const over = (e: MouseEvent) => {
         const target = e.currentTarget as HTMLElement;
         const rect = target.getBoundingClientRect();
 
         if (element.dataset.cursor === "icons") {
           cursor.classList.add("cursor-icons");
-
-          gsap.to(cursor, { x: rect.left, y: rect.top, duration: 0.1 });
+          setCursorX(rect.left);
+          setCursorY(rect.top);
           cursor.style.setProperty("--cursorH", `${rect.height}px`);
           hover = true;
         }
         if (element.dataset.cursor === "disable") {
           cursor.classList.add("cursor-disable");
         }
-      });
-      element.addEventListener("mouseout", () => {
+      };
+
+      const out = () => {
         cursor.classList.remove("cursor-disable", "cursor-icons");
         hover = false;
-      });
+      };
+
+      element.addEventListener("mouseover", over);
+      element.addEventListener("mouseout", out);
+      mouseOverHandlers.push({ el: element, over, out });
     });
+
+    return () => {
+      cancelAnimationFrame(animId);
+      window.removeEventListener("mousemove", onMouseMove);
+      mouseOverHandlers.forEach(({ el, over, out }) => {
+        el.removeEventListener("mouseover", over);
+        el.removeEventListener("mouseout", out);
+      });
+    };
   }, []);
 
   return <div className="cursor-main" ref={cursorRef}></div>;

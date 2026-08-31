@@ -30,7 +30,19 @@ const Loading = ({ percent }: { percent: number }) => {
       const fallback = setTimeout(() => {
         setContextLoading(100);
       }, 3500);
-      return () => clearTimeout(fallback);
+
+      // Absolute master fallback in case of extreme lag/stall
+      const masterFallback = setTimeout(() => {
+        setContextLoading(100);
+        setLoaded(true);
+        setIsLoaded(true);
+        setIsLoading(false);
+      }, 6000);
+
+      return () => {
+        clearTimeout(fallback);
+        clearTimeout(masterFallback);
+      };
     }
   }, []);
 
@@ -50,14 +62,24 @@ const Loading = ({ percent }: { percent: number }) => {
   useEffect(() => {
     if (isLoaded) {
       setClicked(true);
-      import("./utils/initialFX").then((module) => {
-        setTimeout(() => {
-          if (module.initialFX) {
-            module.initialFX();
-          }
+      import("./utils/initialFX")
+        .then((module) => {
+          setTimeout(() => {
+            try {
+              if (module.initialFX) {
+                module.initialFX();
+              }
+            } catch (err) {
+              console.warn("initialFX error:", err);
+            } finally {
+              setIsLoading(false);
+            }
+          }, 800);
+        })
+        .catch((err) => {
+          console.warn("initialFX import error:", err);
           setIsLoading(false);
-        }, 800);
-      });
+        });
     }
   }, [isLoaded]);
 
@@ -125,7 +147,7 @@ export const setProgress = (setLoading: (value: number) => void) => {
 
   let interval = setInterval(() => {
     if (percent <= 50) {
-      let rand = Math.round(Math.random() * 5);
+      const rand = Math.round(Math.random() * 5);
       percent = percent + rand;
       setLoading(percent);
     } else {

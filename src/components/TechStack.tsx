@@ -85,34 +85,27 @@ const workflowSteps = [
 
 const TechStack = () => {
   const [isActive, setIsActive] = useState(false);
+  const [shouldRenderCanvas, setShouldRenderCanvas] = useState(false);
 
   useEffect(() => {
-    const handleScroll = () => {
-      const el = document.getElementById("techstack");
-      if (!el) return;
-      const scrollY = window.scrollY || document.documentElement.scrollTop;
-      const threshold =
-        el.getBoundingClientRect().top + scrollY - window.innerHeight / 2;
-      setIsActive(scrollY > threshold);
-    };
+    const el = document.getElementById("techstack");
+    if (!el) return;
 
-    document.querySelectorAll(".header a").forEach((elem) => {
-      const element = elem as HTMLAnchorElement;
-      element.addEventListener("click", () => {
-        const interval = setInterval(() => {
-          handleScroll();
-        }, 10);
-        setTimeout(() => {
-          clearInterval(interval);
-        }, 1000);
-      });
-    });
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsActive(true);
+          setShouldRenderCanvas(true);
+        }
+      },
+      {
+        rootMargin: "350px 0px 350px 0px",
+        threshold: 0.05,
+      }
+    );
 
-    window.addEventListener("scroll", handleScroll);
-    handleScroll();
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-    };
+    observer.observe(el);
+    return () => observer.disconnect();
   }, []);
 
   return (
@@ -171,51 +164,53 @@ const TechStack = () => {
           <div className="canvas-text-overlay">
             <h3>I Edit All Types of Videos</h3>
           </div>
-          <Canvas
-            shadows
-            dpr={[1, 1.5]}
-            gl={{
-              alpha: true,
-              stencil: false,
-              depth: true,
-              antialias: true,
-              powerPreference: "high-performance",
-            }}
-            camera={{ position: [0, 0, 20], fov: 32.5, near: 1, far: 100 }}
-            onCreated={(state) => (state.gl.toneMappingExposure = 1.4)}
-            className="tech-canvas"
-          >
-            <ambientLight intensity={1.1} />
-            <spotLight
-              position={[20, 20, 25]}
-              penumbra={1}
-              angle={0.3}
-              color="#c2a4ff"
-              castShadow
-              shadow-mapSize={[512, 512]}
-            />
-            <spotLight
-              position={[-20, -10, 15]}
-              penumbra={1}
-              angle={0.4}
-              color="#8250df"
-              intensity={0.6}
-            />
-            <directionalLight
-              position={[0, 6, 8]}
-              intensity={1.8}
-              color="#ffffff"
-            />
-            <SoftwareIconBalls isActive={isActive} />
-            <Environment
-              files="/models/char_enviorment.hdr"
-              environmentIntensity={0.6}
-              environmentRotation={[0, 4, 2]}
-            />
-            <EffectComposer enableNormalPass={false}>
-              <N8AO color="#0f002c" aoRadius={2} intensity={1.15} />
-            </EffectComposer>
-          </Canvas>
+          {shouldRenderCanvas && (
+            <Canvas
+              shadows
+              dpr={[1, 1.5]}
+              gl={{
+                alpha: true,
+                stencil: false,
+                depth: true,
+                antialias: true,
+                powerPreference: "high-performance",
+              }}
+              camera={{ position: [0, 0, 20], fov: 32.5, near: 1, far: 100 }}
+              onCreated={(state) => (state.gl.toneMappingExposure = 1.4)}
+              className="tech-canvas"
+            >
+              <ambientLight intensity={1.1} />
+              <spotLight
+                position={[20, 20, 25]}
+                penumbra={1}
+                angle={0.3}
+                color="#c2a4ff"
+                castShadow
+                shadow-mapSize={[512, 512]}
+              />
+              <spotLight
+                position={[-20, -10, 15]}
+                penumbra={1}
+                angle={0.4}
+                color="#8250df"
+                intensity={0.6}
+              />
+              <directionalLight
+                position={[0, 6, 8]}
+                intensity={1.8}
+                color="#ffffff"
+              />
+              <SoftwareIconBalls isActive={isActive} />
+              <Environment
+                files="/models/char_enviorment.hdr"
+                environmentIntensity={0.6}
+                environmentRotation={[0, 4, 2]}
+              />
+              <EffectComposer enableNormalPass={false}>
+                <N8AO color="#0f002c" aoRadius={2} intensity={1.15} />
+              </EffectComposer>
+            </Canvas>
+          )}
         </div>
       </div>
     </div>
@@ -223,4 +218,3 @@ const TechStack = () => {
 };
 
 export default TechStack;
-

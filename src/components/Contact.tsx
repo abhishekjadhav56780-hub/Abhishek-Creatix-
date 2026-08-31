@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { MdCopyright } from "react-icons/md";
 import { FiArrowDownRight } from "react-icons/fi";
 import ContactHandOrbit from "./ContactHandOrbit";
@@ -7,42 +7,7 @@ import "./styles/Contact.css";
 const Contact = () => {
   const [starRotation, setStarRotation] = useState<number>(0);
   const [isHovered, setIsHovered] = useState<boolean>(false);
-  const [cleanStarSrc, setCleanStarSrc] = useState<string>("/images/purple_star.png");
-
-  // Automatically key out any black background from the 3D star to make it a 100% transparent PNG
-  useEffect(() => {
-    const img = new Image();
-    img.crossOrigin = "anonymous";
-    img.onload = () => {
-      const canvas = document.createElement("canvas");
-      canvas.width = img.naturalWidth;
-      canvas.height = img.naturalHeight;
-      const ctx = canvas.getContext("2d");
-      if (!ctx) return;
-
-      ctx.drawImage(img, 0, 0);
-      const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      const data = imgData.data;
-
-      for (let i = 0; i < data.length; i += 4) {
-        const r = data[i];
-        const g = data[i + 1];
-        const b = data[i + 2];
-        const brightness = Math.max(r, g, b);
-
-        // Key out black background cleanly
-        if (brightness < 16) {
-          data[i + 3] = 0;
-        } else if (brightness < 45) {
-          data[i + 3] = Math.min(255, Math.floor(((brightness - 16) / 29) * 255));
-        }
-      }
-
-      ctx.putImageData(imgData, 0, 0);
-      setCleanStarSrc(canvas.toDataURL("image/png"));
-    };
-    img.src = "/images/purple_star.png";
-  }, []);
+  const cleanStarSrc = "/images/purple_star_transparent.png";
 
   const handleStarMouseEnter = () => {
     setIsHovered(true);
@@ -73,7 +38,7 @@ const Contact = () => {
                     src="/images/user_photo.jpg"
                     alt="Abhishek Jadhav"
                     className="contact-avatar-img"
-                    loading="eager"
+                    loading="lazy"
                   />
                 </div>
               </div>
@@ -149,7 +114,7 @@ const Contact = () => {
                         ? `scale(1.18) rotate(${starRotation}deg)`
                         : `scale(1) rotate(${starRotation}deg)`,
                     }}
-                    loading="eager"
+                    loading="lazy"
                   />
                 </div>
 
