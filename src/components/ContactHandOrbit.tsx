@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef } from "react";
 import "./styles/ContactHandOrbit.css";
 
 interface OrbitingIcon {
@@ -7,7 +7,7 @@ interface OrbitingIcon {
   renderIcon: () => React.ReactNode;
 }
 
-// 7 exact software icons from the reference image: Ps, Pr, Ai, Figma, Ae, Lr, CapCut
+// 7 exact software icons from the user reference ring: Ps, Pr, Ai, Figma, Ae, Lr, CapCut
 const ORBIT_ICONS: OrbitingIcon[] = [
   {
     id: "ps",
@@ -98,67 +98,76 @@ const ORBIT_ICONS: OrbitingIcon[] = [
 
 export const ContactHandOrbit: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [mouseOffset, setMouseOffset] = useState({ x: 0, y: 0 });
+  const stageRef = useRef<HTMLDivElement>(null);
+  const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
   const animFrameRef = useRef<number>(0);
   const angleRef = useRef<number>(0);
+  const isVisibleRef = useRef<boolean>(false);
 
-  const [iconTransforms, setIconTransforms] = useState<
-    {
-      x: number;
-      y: number;
-      scale: number;
-      opacity: number;
-      zIndex: number;
-    }[]
-  >([]);
+  // IntersectionObserver to only animate orbit when the contact section is in viewport
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
 
-  // Continuous 60fps 3D orbital motion around hand and fingers
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        isVisibleRef.current = entry.isIntersecting;
+      },
+      {
+        rootMargin: "200px 0px 200px 0px",
+        threshold: 0.05,
+      }
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  // Smooth 60fps orbital motion with high-performance direct DOM style updates
   useEffect(() => {
     let lastTime = performance.now();
-    const speed = 0.00042; // Smooth, continuous cinematic rotation speed
+    const speed = 0.00035; // Slow, cinematic orbital speed
+    const numIcons = ORBIT_ICONS.length;
 
     const animate = (now: number) => {
       const delta = now - lastTime;
       lastTime = now;
-      angleRef.current = (angleRef.current + speed * delta) % (Math.PI * 2);
 
-      const isMobile = window.innerWidth <= 768;
-      // Orbit positioned around the palm & fingers like in the reference image
-      const radiusX = isMobile ? 130 : 185;
-      const radiusY = isMobile ? 46 : 64;
-      const tilt = -0.18; // 3D Slanted plane
-      const centerX = 0; // Centered on hand
-      const centerY = isMobile ? -30 : -50; // Orbit encircling the fingers & palm
+      if (isVisibleRef.current) {
+        angleRef.current = (angleRef.current + speed * delta) % (Math.PI * 2);
 
-      const numIcons = ORBIT_ICONS.length;
-      const newTransforms = ORBIT_ICONS.map((_, i) => {
-        const baseAngle = (i / numIcons) * Math.PI * 2;
-        const currentAngle = (baseAngle + angleRef.current) % (Math.PI * 2);
+        const isMobile = window.innerWidth <= 768;
+        const radiusX = isMobile ? 128 : 164;
+        const radiusY = isMobile ? 46 : 58;
+        const tilt = -0.22;
+        const centerX = isMobile ? -6 : -12;
+        const centerY = isMobile ? 10 : 25;
 
-        const rawX = Math.cos(currentAngle) * radiusX;
-        const rawY = Math.sin(currentAngle) * radiusY;
-        const rawZ = Math.sin(currentAngle); // -1 (behind) to +1 (in front)
+        for (let i = 0; i < numIcons; i++) {
+          const itemEl = itemRefs.current[i];
+          if (!itemEl) continue;
 
-        // 2D Rotation by tilt
-        const rotX = rawX * Math.cos(tilt) - rawY * Math.sin(tilt) + centerX;
-        const rotY = rawX * Math.sin(tilt) + rawY * Math.cos(tilt) + centerY;
+          const baseAngle = (i / numIcons) * Math.PI * 2;
+          const currentAngle = (baseAngle + angleRef.current) % (Math.PI * 2);
 
-        // 3D Depth scale & opacity
-        const depthFactor = (rawZ + 1) / 2; // 0 (back) to 1 (front)
-        const scale = 0.82 + 0.38 * depthFactor;
-        const opacity = 0.65 + 0.35 * depthFactor;
-        const zIndex = rawZ >= -0.05 ? 12 : 2; // Hand sits at zIndex: 6
+          const rawX = Math.cos(currentAngle) * radiusX;
+          const rawY = Math.sin(currentAngle) * radiusY;
+          const rawZ = Math.sin(currentAngle);
 
-        return {
-          x: rotX,
-          y: rotY,
-          scale,
-          opacity,
-          zIndex,
-        };
-      });
+          const rotX = rawX * Math.cos(tilt) - rawY * Math.sin(tilt) + centerX;
+          const rotY = rawX * Math.sin(tilt) + rawY * Math.cos(tilt) + centerY;
 
-      setIconTransforms(newTransforms);
+          const depthFactor = (rawZ + 1) / 2;
+          const scale = 0.85 + 0.35 * depthFactor;
+          const opacity = 0.65 + 0.35 * depthFactor;
+          const zIndex = rawZ >= -0.05 ? 12 : 2;
+
+          itemEl.style.transform = `translate3d(calc(-50% + ${rotX}px), calc(-50% + ${rotY}px), 0) scale(${scale})`;
+          itemEl.style.opacity = `${opacity}`;
+          itemEl.style.zIndex = `${zIndex}`;
+        }
+      }
+
       animFrameRef.current = requestAnimationFrame(animate);
     };
 
@@ -166,17 +175,19 @@ export const ContactHandOrbit: React.FC = () => {
     return () => cancelAnimationFrame(animFrameRef.current);
   }, []);
 
-  // Interactive 3D Parallax with mouse
+  // Subtle interactive parallax using direct style transform
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!containerRef.current) return;
+    if (!containerRef.current || !stageRef.current) return;
     const rect = containerRef.current.getBoundingClientRect();
     const nx = (e.clientX - (rect.left + rect.width / 2)) / (rect.width / 2);
     const ny = (e.clientY - (rect.top + rect.height / 2)) / (rect.height / 2);
-    setMouseOffset({ x: nx * 8, y: ny * 6 });
+    stageRef.current.style.transform = `translate3d(${nx * 8}px, ${ny * 6}px, 0)`;
   };
 
   const handleMouseLeave = () => {
-    setMouseOffset({ x: 0, y: 0 });
+    if (stageRef.current) {
+      stageRef.current.style.transform = `translate3d(0px, 0px, 0)`;
+    }
   };
 
   return (
@@ -189,47 +200,29 @@ export const ContactHandOrbit: React.FC = () => {
       {/* Purple Ambient Aura Background */}
       <div className="hand-aura-glow"></div>
 
-      {/* Orbit Stage with Parallax */}
-      <div
-        className="orbit-stage"
-        style={{
-          transform: `translate3d(${mouseOffset.x}px, ${mouseOffset.y}px, 0)`,
-        }}
-      >
-        {/* Hand Asset sitting flush in the center */}
+      {/* Orbit Container with 3D Parallax */}
+      <div className="orbit-stage" ref={stageRef}>
+        {/* Noticeably Larger 3D Hand sitting flush at the bottom edge */}
         <div className="hand-visual-wrap">
           <img
             src="/images/contact_hand.png"
             alt="Abhishek Creative Hand"
             className="contact-hand-img"
-            loading="eager"
+            loading="lazy"
           />
         </div>
 
-        {/* Orbiting Software Icons (revolving 360° in front and behind the hand) */}
-        {ORBIT_ICONS.map((icon, idx) => {
-          const t = iconTransforms[idx] || {
-            x: 0,
-            y: 0,
-            scale: 1,
-            opacity: 1,
-            zIndex: 1,
-          };
-          return (
-            <div
-              key={icon.id}
-              className="orbiting-item"
-              style={{
-                transform: `translate3d(calc(-50% + ${t.x}px), calc(-50% + ${t.y}px), 0) scale(${t.scale})`,
-                opacity: t.opacity,
-                zIndex: t.zIndex,
-              }}
-              title={icon.name}
-            >
-              {icon.renderIcon()}
-            </div>
-          );
-        })}
+        {/* Orbiting Software Icons */}
+        {ORBIT_ICONS.map((icon, idx) => (
+          <div
+            key={icon.id}
+            ref={(el) => (itemRefs.current[idx] = el)}
+            className="orbiting-item"
+            title={icon.name}
+          >
+            {icon.renderIcon()}
+          </div>
+        ))}
       </div>
     </div>
   );
